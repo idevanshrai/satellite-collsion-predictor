@@ -20,7 +20,7 @@ class SatelliteCollisionPredictor {
         this.selectedSatellite = null;
         
         // API Configuration
-        this.API_BASE = window.location.origin;
+        this.API_BASE = 'http://127.0.0.1:5000';
         
         // Prominent satellites for initial display
         this.PROMINENT_SATELLITES = [
@@ -817,39 +817,52 @@ class SatelliteCollisionPredictor {
     }
     
     async analyzeCollision() {
-        const sat1 = document.getElementById('satellite-1').value;
-        const sat2 = document.getElementById('satellite-2').value;
-        
-        if (!sat1 || !sat2) {
-            this.showAlert('Selection Required', 'Please select both satellites for analysis', 'warning');
-            return;
-        }
-        
-        if (sat1 === sat2) {
-            this.showAlert('Invalid Selection', 'Please select two different satellites', 'warning');
-            return;
-        }
-        
-        try {
-            this.showLoading('Analyzing orbital trajectories...');
-            this.addSystemLog(`Analyzing collision risk: ${sat1} ↔ ${sat2}`, 'warning');
-            
-            const response = await fetch(`${this.API_BASE}/predict?sat1=${encodeURIComponent(sat1)}&sat2=${encodeURIComponent(sat2)}`);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            
-            const data = await response.json();
-            this.displayAnalysisResults(data);
-            
-            this.addSystemLog(`Analysis complete - Min distance: ${data.min_distance_km.toFixed(2)} km`, 'success');
-            
-        } catch (error) {
-            console.error('Collision analysis failed:', error);
-            // Fallback to mock analysis
-            this.performMockAnalysis(sat1, sat2);
-        } finally {
-            this.hideLoading();
-        }
+    const sat1 = document.getElementById('satellite-1').value;
+    const sat2 = document.getElementById('satellite-2').value;
+    
+    if (!sat1 || !sat2) {
+        this.showAlert('Selection Required', 'Please select both satellites for analysis', 'warning');
+        return;
     }
+    
+    if (sat1 === sat2) {
+        this.showAlert('Invalid Selection', 'Please select two different satellites', 'warning');
+        return;
+    }
+    
+    try {
+        this.showLoading('Analyzing orbital trajectories...');
+        this.addSystemLog(`Analyzing collision risk: ${sat1} ↔ ${sat2}`, 'warning');
+        
+        const response = await fetch(`${this.API_BASE}/predict?sat1=${encodeURIComponent(sat1)}&sat2=${encodeURIComponent(sat2)}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const data = await response.json();
+        this.displayAnalysisResults(data);
+
+        // AI SUMMARY AREA AFAJWFA"
+        document.getElementById("approach-time").textContent = data.closest_approach_time 
+            ? new Date(data.closest_approach_time).toUTCString()
+            : "--";
+
+        const riskLevel = document.querySelector("#risk-indicator .risk-level");
+        riskLevel.textContent = data.risk_category;
+        riskLevel.className = `risk-level ${data.risk_category.toLowerCase()}`;
+
+        const riskPercentage = document.querySelector("#risk-indicator .risk-percentage");
+        riskPercentage.textContent = data.risk_message || "N/A";
+
+        this.addSystemLog(`Analysis complete - Min distance: ${data.min_distance_km.toFixed(2)} km`, 'success');
+        
+    } catch (error) {
+        console.error('Collision analysis failed:', error);
+        // Fallback to mock analysis
+        this.performMockAnalysis(sat1, sat2);
+    } finally {
+        this.hideLoading();
+    }
+}
+
     
     performMockAnalysis(sat1, sat2) {
         // Mock analysis when backend is unavailable
@@ -866,26 +879,59 @@ class SatelliteCollisionPredictor {
         this.addSystemLog('Mock analysis performed (backend offline)', 'warning');
     }
     
-    displayAnalysisResults(data) {
-        document.getElementById('min-distance').textContent = `${data.min_distance_km.toFixed(2)} km`;
-        
-        // Calculate estimated time to closest approach
-        const timeToApproach = this.calculateTimeToApproach(data.min_distance_km);
-        document.getElementById('approach-time').textContent = timeToApproach;
-        
-        // Risk assessment
-        const riskLevel = this.calculateRiskLevel(data.min_distance_km);
-        const riskPercentage = this.calculateRiskPercentage(data.min_distance_km);
-        
-        const riskLevelEl = document.getElementById('risk-level');
-        riskLevelEl.textContent = riskLevel;
-        riskLevelEl.className = `risk-level ${riskLevel.toLowerCase()}`;
-        
-        document.getElementById('risk-percentage').textContent = `${riskPercentage}%`;
-        
-        document.getElementById('results-panel').style.display = 'block';
+  displayAnalysisResults(data) {
+    // Minimum distance
+    document.getElementById('min-distance').textContent =
+        `${data.min_distance_km.toFixed(2)} km`;
+
+    // Closest approach time (from backend)
+    let approachTime = "--";
+    if (data.closest_approach_time) {
+        const dt = new Date(data.closest_approach_time);
+        approachTime = dt.toUTCString();
+    } else {
+        // fallback estimate if backend didn’t provide
+        approachTime = this.calculateTimeToApproach(data.min_distance_km);
     }
-    
+    document.getElementById('approach-time').textContent = approachTime;
+
+    // Risk assessment (use backend if provided, else fallback)
+    const riskLevel = data.risk_category || this.calculateRiskLevel(data.min_distance_km);
+    const riskMessage = data.risk_message || "No message available";
+    const riskPercentage = this.calculateRiskPercentage(data.min_distance_km);
+
+    // Update risk indicator UI
+    const riskLevelEl = document.querySelector("#risk-indicator .risk-level");
+    riskLevelEl.textContent = riskLevel;
+    riskLevelEl.className = `risk-level ${riskLevel.toLowerCase()}`;
+
+    const riskPercentageEl = document.querySelector("#risk-indicator .risk-percentage");
+    riskPercentageEl.textContent = `${riskPercentage}%`;
+
+    // Professional AI-style narrative with formatting
+    const actionMessage = (() => {
+        if (riskLevel === "SAFE") return "No immediate action is required.";
+        if (riskLevel === "CAUTION") return "Monitoring is advised as the satellites will pass relatively close.";
+        if (riskLevel === "WARNING" || riskLevel === "DANGER") return "Mission control should monitor trajectories closely.";
+        if (riskLevel === "CRITICAL") return "Immediate evasive maneuvers may be required to mitigate collision risk.";
+        return "";
+    })();
+
+    const aiMessage = `
+        <strong>Closest Approach:</strong> ${approachTime}<br>
+        <strong>Minimum Distance:</strong> ${data.min_distance_km.toFixed(2)} km<br>
+        <strong>Collision Risk:</strong> ${riskLevel} (${riskPercentage}% probability)<br>
+        <br>
+        ${riskMessage} ${actionMessage}
+    `;
+
+    // Update AI narrative section (now using innerHTML for formatting)
+    document.getElementById('ai-narrative-text').innerHTML = aiMessage;
+
+    // Show results panel
+    document.getElementById('results-panel').style.display = 'block';
+   }
+
     calculateTimeToApproach(distance) {
         const avgOrbitalSpeed = 7.8;
         const timeInSeconds = distance / avgOrbitalSpeed;

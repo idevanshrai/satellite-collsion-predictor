@@ -10,6 +10,8 @@ def load_tles(*file_paths):
     satellites = {}
     for file_path in file_paths:
         full_path = os.path.join(BASE_DIR, file_path)
+        if not os.path.exists(full_path):
+            continue
         with open(full_path, "r") as f:
             lines = f.readlines()
             for i in range(0, len(lines), 3):
@@ -35,6 +37,8 @@ def get_position(satrec_obj, dt):
 def compute_min_distance(sat1, sat2, hours=24, step_minutes=5):
     now = datetime.utcnow()
     min_dist = float("inf")
+    closest_time = None
+
     for t in range(0, hours * 60, step_minutes):
         dt = now + timedelta(minutes=t)
         pos1 = get_position(sat1, dt)
@@ -43,4 +47,6 @@ def compute_min_distance(sat1, sat2, hours=24, step_minutes=5):
             dist = np.linalg.norm(pos1 - pos2)
             if dist < min_dist:
                 min_dist = dist
-    return min_dist
+                closest_time = dt
+
+    return min_dist, closest_time

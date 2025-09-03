@@ -521,63 +521,70 @@ body {
 }
 
 .results-panel {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
+    background: #0d1117;
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 16px;
+    margin-top: 12px;
+    font-family: 'Inter', sans-serif;
 }
 
 .result-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-
 .result-item:last-child {
-    margin-bottom: 0;
+    border-bottom: none;
 }
 
 .result-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    font-weight: 500;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #9ca3af;
+    letter-spacing: 0.5px;
 }
 
 .result-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #f9fafb;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.9rem;
-    color: var(--accent-cyan);
-    font-weight: 600;
 }
 
 .risk-indicator {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    flex-direction: column;
+    align-items: flex-end;
 }
 
 .risk-level {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 2px 8px;
     border-radius: 4px;
-    background: var(--bg-secondary);
+    text-transform: uppercase;
+}
+.risk-level.safe { background: rgba(16,185,129,0.2); color: #10b981; }
+.risk-level.low { background: rgba(34,197,94,0.2); color: #22c55e; }
+.risk-level.caution { background: rgba(251,191,36,0.2); color: #fbbf24; }
+.risk-level.warning { background: rgba(251,146,60,0.2); color: #fb923c; }
+.risk-level.danger, .risk-level.critical { background: rgba(239,68,68,0.2); color: #ef4444; }
+
+.ai-narrative {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid #0ea5e9;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #d1d5db;
 }
 
-.risk-level.safe {
-    color: var(--success-green);
-}
-
-.risk-level.warning {
-    color: var(--warning-orange);
-}
-
-.risk-level.danger {
-    color: var(--danger-red);
-    animation: pulse 1s ease-in-out infinite;
+.ai-narrative strong {
+    color: #f9fafb;
 }
 
 .risk-percentage {
